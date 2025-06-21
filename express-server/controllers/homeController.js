@@ -1,5 +1,3 @@
-// Functions / APIs are made here.
-
 const renderWelcome = (req, res) => {
     res.send('Welcome to Stock Tracker API!');
 };
@@ -12,28 +10,8 @@ const aboutPage = (req, res) => {
 };
 
 
-const createUser = async (req, res) => {
-    res.send('User Created');
-};
-
-const loginUsers = (req,res) => {
-    res.send("User Loggedin")
-};
-
-const viewProfile = (req,res) => {
-    res.send("Profile viewed")
-};
-
-const changePassword = (req,res) => {
-    res.send("Password Changed")
-};
-
 module.exports = {
     renderWelcome,
-    aboutPage,
-    createUser,
-    loginUsers,
-    viewProfile,
-    changePassword
+    aboutPage
 }
 
