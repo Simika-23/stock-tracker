@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "react-hot-toast";
+import { createUserApi } from '../api/Api';
 
 const Register = () => {
     const [registerData, setRegisterData] = useState({
@@ -16,16 +17,31 @@ const Register = () => {
         }));
     };
 
-    const submit = (e) => {
+    const submit = async (e) => {
         e.preventDefault();
         const { name, email, password } = registerData;
 
         if (!name || !email || !password) {
-            return toast.error("Please fill in all fields");
+            return toast.error("Please enter all fields");
         }
 
-        toast.success(`Thank you for registering, ${name}!`);
-        // later: connect with backend here
+        try {
+            const formData = new FormData();
+            formData.append('userName', name);
+            formData.append('email', email);
+            formData.append('password', password);
+            const response= await createUserApi(formData);
+            if (response?.data?.success) {
+                return toast.success(response?.data?.message)
+            }
+            else {
+                return toast.error(response?.data?.message)
+            }
+        
+        } catch (err) {
+            console.error("Error creating user", err);
+            toast.error(err?.response?.data?.message)
+        }
     };
 
     return (

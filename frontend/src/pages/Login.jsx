@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { toast } from "react-hot-toast";
+import { loginUserApi } from '../api/Api';
+import { jwtDecode } from 'jwt-decode';
 
 const Login = () => {
     const [loginData, setLoginData] = useState({
@@ -15,16 +17,42 @@ const Login = () => {
         }));
     };
 
-    const submit = (e) => {
+    const submit = async (e) => {
         e.preventDefault();
         const { email, password } = loginData;
 
         if (!email || !password) {
             return toast.error("Please fill in all fields");
         }
-
-        toast.success(`Welcome back!`);
-        // later: call your login API here
+        try {
+            const data ={
+                email:email, password: password
+            }
+            const response = await loginUserApi(data);
+            if (response?.data?.success) {
+                localStorage.setItem("token", response?.data?.token)
+                toast.success(response?.data?.message)
+                const decode = jwtDecode(response?.data?.token)
+                if (decode.role==="user") {
+                    setTimeout(() => {
+                        return window.location.href="/homepage"
+                    }, 1000);
+                }
+                else {
+                    setTimeout(() => {
+                        return window.location.href="/dashboard"
+                    }, 1000);
+                }
+                // it is safe checkout, though we dont do refresh in react.
+                return 
+            }
+            else {
+                return toast.error(response?.data?.message)
+            }
+        }
+        catch (err) {
+            return toast.error(err?.response?.data?.message)
+        }
     };
 
     return (
