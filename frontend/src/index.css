@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
-body {
+/* body {
   user-select: none;
   cursor: default;
-}
+} */
 
 /* Re-enable in form fields */
 input, textarea {

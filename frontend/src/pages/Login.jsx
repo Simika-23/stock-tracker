@@ -2,8 +2,11 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { loginUserApi } from '../api/Api';
 import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
+    const navigate = useNavigate();
+
     const [loginData, setLoginData] = useState({
         email: '',
         password: ''
@@ -24,27 +27,28 @@ const Login = () => {
         if (!email || !password) {
             return toast.error("Please fill in all fields");
         }
+
         try {
-            const data ={
-                email:email, password: password
-            }
+            const data = {
+                email: email, password: password
+            };
+
             const response = await loginUserApi(data);
+
             if (response?.data?.success) {
                 localStorage.setItem("token", response?.data?.token)
                 toast.success(response?.data?.message)
+
                 const decode = jwtDecode(response?.data?.token)
-                if (decode.role==="user") {
-                    setTimeout(() => {
-                        return window.location.href="/homepage"
-                    }, 1000);
+
+                if (decode.role === "user") {
+                    setTimeout(() => navigate("/dashboard"), 1000);
                 }
                 else {
-                    setTimeout(() => {
-                        return window.location.href="/dashboard"
-                    }, 1000);
+                    setTimeout(() => navigate("/admin"), 1000);
                 }
                 // it is safe checkout, though we dont do refresh in react.
-                return 
+                return
             }
             else {
                 return toast.error(response?.data?.message)
@@ -56,19 +60,19 @@ const Login = () => {
     };
 
     return (
-        <div className="h-screen flex flex-col items-center justify-center bg-gray-100">
-            <form 
-                onSubmit={submit} 
-                className="bg-white p-8 md:p-10 rounded-2xl shadow-xl w-full max-w-md space-y-6"
+        <div className="h-screen bg-gradient-to-br from-blue-100 to-white flex flex-col items-center justify-center">
+            <form
+                onSubmit={submit}
+                className="backdrop-blur-xl bg-white/70 border border-blue-100 rounded-2xl p-10 shadow-2xl w-full max-w-md space-y-6"
             >
-                <h2 className="text-2xl font-bold text-gray-700">Login</h2>
+                <h2 className="text-3xl font-extrabold text-blue-900 text-center">Login</h2>
 
                 <input
                     name="email"
                     value={loginData.email}
                     onChange={handleChange}
                     placeholder="Email"
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    className="w-full px-4 py-3 border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-blue-900"
                 />
 
                 <input
@@ -77,12 +81,12 @@ const Login = () => {
                     value={loginData.password}
                     onChange={handleChange}
                     placeholder="Password"
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    className="w-full px-4 py-3 border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-blue-900"
                 />
 
                 <button
                     type="submit"
-                    className="w-full bg-blue-500 text-white py-2 rounded-xl hover:bg-blue-600 transition"
+                    className="w-full bg-blue-700 text-white py-3 rounded-xl hover:bg-blue-800 font-semibold transition shadow-md"
                 >
                     Login
                 </button>
@@ -91,4 +95,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default Login; 
