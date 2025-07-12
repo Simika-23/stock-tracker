@@ -25,14 +25,14 @@ app.use(cors({
 const homeRoutes = require('./routes/home');
 const userRoutes = require('./routes/user');
 const portfolioRoutes = require('./routes/portfolio');
-
+const stockRoutes = require('./routes/stock');
 
 // USE ROUTES
 app.use('/', homeRoutes);
 app.use('/api/home', homeRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/portfolio', portfolioRoutes);
-
+app.use('/api/stocks', stockRoutes);
 
 // SERVER BOOTSTRAPPING Function
 const startServer = async () => {
