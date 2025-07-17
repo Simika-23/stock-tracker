@@ -17,9 +17,9 @@ router.use(portfolioLimiter);
 
 router.post('/', authGuard, createPortfolioEntry);
 router.get('/', authGuard, getPortfolioEntries);
+router.get('/performance', authGuard, getPortfolioPerformance);
 router.get('/:id', authGuard, getPortfolioEntryById);
 router.put('/:id', authGuard, updatePortfolioEntry);
 router.delete('/:id', authGuard, deletePortfolioEntry);
-router.get('/performance', authGuard, getPortfolioPerformance);
 
 module.exports = router;
