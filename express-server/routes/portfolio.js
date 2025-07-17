@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const authGuard = require('../middleware/authguard');
-const { createPortfolioEntry, getPortfolioEntries, updatePortfolioEntry, deletePortfolioEntry, getPortfolioEntryById } = require('../controllers/portfolioController');
+const { createPortfolioEntry, getPortfolioEntries, updatePortfolioEntry, deletePortfolioEntry, getPortfolioEntryById, getPortfolioPerformance } = require('../controllers/portfolioController');
 
 // Rate limiter: 60 requests per minute per IP
 const portfolioLimiter = rateLimit({
@@ -20,5 +20,6 @@ router.get('/', authGuard, getPortfolioEntries);
 router.get('/:id', authGuard, getPortfolioEntryById);
 router.put('/:id', authGuard, updatePortfolioEntry);
 router.delete('/:id', authGuard, deletePortfolioEntry);
+router.get('/performance', authGuard, getPortfolioPerformance);
 
 module.exports = router;

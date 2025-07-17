@@ -151,6 +151,34 @@ const deletePortfolioEntry = async (req, res) => {
   }
 };
 
+const getPortfolioPerformance = async (req, res) => {
+    const userId = req.user.id;
+
+    try {
+        const portfolio = await Portfolio.findAll({ where: { userId } });
+
+        // Performance calculations...
+        let totalInvested = 0;
+        let totalCurrent = 0;
+
+        for (let item of portfolio) {
+            totalInvested += item.quantity * item.buyPrice;
+
+            const currentPrice = await fetchCurrentStockPrice(item.symbol); // External API call
+            totalCurrent += item.quantity * currentPrice;
+        }
+
+        const profitOrLoss = totalCurrent - totalInvested;
+        const percentChange = (profitOrLoss / totalInvested) * 100;
+
+        res.json({ totalInvested, totalCurrent, profitOrLoss, percentChange });
+    } catch (error) {
+        console.error("Performance calculation error:", error);
+        res.status(500).json({ error: "Error calculating performance" });
+    }
+};
+
+
 // Export all functions
 module.exports = {
   createPortfolioEntry,
@@ -158,4 +186,6 @@ module.exports = {
   getPortfolioEntryById,
   updatePortfolioEntry,
   deletePortfolioEntry,
+  getPortfolioPerformance
 };
+
