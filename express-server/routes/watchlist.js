@@ -22,6 +22,6 @@ router.use(watchlistLimiter);
 // Watchlist routes
 router.post('/add', addToWatchlist);
 router.get('/', getWatchlist);
-router.delete('/:stockSymbol', removeFromWatchlist);
+router.delete('/:id', removeFromWatchlist);
 
 module.exports = router;

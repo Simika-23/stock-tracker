@@ -49,11 +49,11 @@ const getWatchlist = async (req, res) => {
 
 // Remove stock from watchlist
 const removeFromWatchlist = async (req, res) => {
-  const { stockSymbol } = req.params;
+  const id = req.params.id;
   const userId = req.user.id;
 
   try {
-    const deleted = await Watchlist.destroy({ where: { userId, stockSymbol } });
+    const deleted = await Watchlist.destroy({ where: { id, userId } });
 
     if (!deleted) {
       return res.status(404).json({ success: false, message: 'Stock not found in watchlist' });
