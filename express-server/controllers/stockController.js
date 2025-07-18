@@ -14,7 +14,7 @@ exports.searchStock = async (req, res) => {
   if (error) return res.status(400).json({ message: error.details[0].message });
 
   try {
-    const apiUrl = `https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${process.env.TWELVEDATA_API_KEY}`;
+    const apiUrl = `https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`;
 
     const response = await axios.get(apiUrl);
 

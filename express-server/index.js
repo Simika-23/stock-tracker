@@ -4,9 +4,12 @@ const app = express();
 require('dotenv').config();
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-
+   
 const PORT = process.env.PORT || 5555;
 const { connectDB, sequelize } = require('./db/database');
+const { checkAlerts } = require('./controllers/alertChecker');
+
+setInterval(checkAlerts, 60000); // check every 60 seconds
 
 // Middleware Setup
 app.use(express.json());  // Parses incoming JSON requests
@@ -27,6 +30,8 @@ const userRoutes = require('./routes/user');
 const portfolioRoutes = require('./routes/portfolio');
 const stockRoutes = require('./routes/stock');
 const watchlistRoutes = require('./routes/watchlist');
+const alertRoutes = require('./routes/alert');
+const notificationRoutes = require('./routes/notification');
 
 // USE ROUTES
 app.use('/', homeRoutes);
@@ -35,6 +40,8 @@ app.use('/api/user', userRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/stocks', stockRoutes);
 app.use('/api/watchlist', watchlistRoutes);
+app.use('/api/alerts', alertRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // SERVER BOOTSTRAPPING Function
 const startServer = async () => {
@@ -43,7 +50,7 @@ const startServer = async () => {
 
     // Sync models only if not in production
     if (process.env.NODE_ENV !== 'production') {
-      await sequelize.sync({ alter: true }); // Alter only for development
+      await sequelize.sync({ alert: true }); // Alter only for development
       console.log('✅ Database synced (ALTER applied)');
     }
 

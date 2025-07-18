@@ -18,7 +18,7 @@ const fetchLiveData = async (symbol) => {
     if (liveDataCache.has(symbol)) return liveDataCache.get(symbol); // Return from cache if available
 
     const { data } = await axios.get(
-      `https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${process.env.TWELVEDATA_API_KEY}`
+      `https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`
     );
 
     if (!data || data.status === 'error' || !data.name) return null; // Protect against bad API response
