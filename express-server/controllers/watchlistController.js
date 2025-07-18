@@ -1,7 +1,7 @@
 const Joi = require('joi');
+const axios = require('axios');
 const Watchlist = require('../models/watchlist');
 
-// Input validation schema
 const watchlistSchema = Joi.object({
   stockSymbol: Joi.string().trim().uppercase().required()
 });
@@ -30,7 +30,7 @@ const addToWatchlist = async (req, res) => {
   }
 };
 
-// Get user's watchlist
+// Get user's watchlist with live stock prices
 const getWatchlist = async (req, res) => {
   const userId = req.user.id;
 
@@ -40,7 +40,19 @@ const getWatchlist = async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    res.status(200).json({ success: true, data: items });
+    // For each stock in watchlist, fetch live price from API
+    const enrichedItems = await Promise.all(items.map(async (item) => {
+      try {
+        const response = await axios.get(`https://api.twelvedata.com/price?symbol=${item.stockSymbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`);
+        item.dataValues.price = response.data.price || "N/A";
+      } catch (err) {
+        console.error(`Price fetch failed for ${item.stockSymbol}:`, err.message);
+        item.dataValues.price = "Unavailable";
+      }
+      return item;
+    }));
+
+    res.status(200).json({ success: true, data: enrichedItems });
   } catch (err) {
     console.error(`User ${userId} | Get Watchlist Error:`, err.message);
     res.status(500).json({ success: false, message: 'Server error' });

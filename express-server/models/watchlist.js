@@ -4,11 +4,13 @@ const { sequelize } = require('../db/database');
 const Watchlist = sequelize.define('Watchlist', {
   userId: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    unique: 'user_stock'
   },
   stockSymbol: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    unique: 'user_stock'
   }
 }, {
   tableName: 'watchlists',
