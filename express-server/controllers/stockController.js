@@ -1,33 +1,29 @@
 const axios = require('axios');
 const Joi = require('joi');
 
-// Joi schema to validate stock symbol for search
+// Validation schema for stock search
 const stockSearchSchema = Joi.object({
   symbol: Joi.string().trim().uppercase().min(1).required()
 });
 
-// Joi schema to validate historical chart parameters
+// Validation schema for historical chart parameters
 const historicalSchema = Joi.object({
   symbol: Joi.string().trim().uppercase().min(1).required(),
   range: Joi.string().valid('1day', '1week', '1month', '3months', '1year').default('1month'),
-  interval: Joi.string().valid('1min', '5min', '15min', '30min', '1h', '1day') // optional
+  interval: Joi.string().valid('1min', '5min', '15min', '30min', '1h', '1day')
 });
 
-// GET: Real-time Stock Quote
-
+// GET: Real-time stock quote
 const searchStock = async (req, res) => {
   try {
-    const { symbol } = req.query;
-    const value = await stockSearchSchema.validateAsync({ symbol });
+    const { symbol } = await stockSearchSchema.validateAsync(req.query);
 
-    const apiUrl = `https://api.twelvedata.com/quote?symbol=${value.symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`;
-    const response = await axios.get(apiUrl);
+    const apiUrl = `https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`;
+    const { data } = await axios.get(apiUrl);
 
-    if (!response.data || response.data.status === 'error') {
-      return res.status(404).json({ success: false, message: 'Stock not found' });
+    if (!data || data.status === 'error' || !data.close) {
+      return res.status(404).json({ success: false, message: 'Stock not found or invalid symbol.' });
     }
-
-    const data = response.data;
 
     return res.status(200).json({
       success: true,
@@ -47,12 +43,10 @@ const searchStock = async (req, res) => {
   }
 };
 
-// GET: Historical Stock Data 
-
+// GET: Historical Stock Data
 const getHistoricalStockData = async (req, res) => {
   try {
-    const { symbol, range, interval } = req.query;
-    const value = await historicalSchema.validateAsync({ symbol, range, interval });
+    const { symbol, range, interval } = await historicalSchema.validateAsync(req.query);
 
     const intervalMap = {
       '1day': '5min',
@@ -62,16 +56,16 @@ const getHistoricalStockData = async (req, res) => {
       '1year': '1day'
     };
 
-    const finalInterval = value.interval || intervalMap[value.range] || '1h';
+    const finalInterval = interval || intervalMap[range] || '1h';
 
-    const apiUrl = `https://api.twelvedata.com/time_series?symbol=${value.symbol}&interval=${finalInterval}&outputsize=100&apikey=${process.env.TWELVE_DATA_API_KEY}`;
-    const response = await axios.get(apiUrl);
+    const apiUrl = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=${finalInterval}&outputsize=100&apikey=${process.env.TWELVE_DATA_API_KEY}`;
+    const { data } = await axios.get(apiUrl);
 
-    if (!response.data || response.data.status === 'error' || !response.data.values) {
-      return res.status(404).json({ success: false, message: 'Historical stock data not found' });
+    if (!data || data.status === 'error' || !data.values) {
+      return res.status(404).json({ success: false, message: 'Historical data not found or invalid request.' });
     }
 
-    const dataPoints = response.data.values.map(point => ({
+    const historicalData = data.values.map(point => ({
       datetime: point.datetime,
       timestamp: new Date(point.datetime).getTime(),
       open: parseFloat(point.open),
@@ -79,17 +73,15 @@ const getHistoricalStockData = async (req, res) => {
       low: parseFloat(point.low),
       close: parseFloat(point.close),
       volume: parseInt(point.volume, 10)
-    }));
-
-    const sortedData = dataPoints.sort((a, b) => a.timestamp - b.timestamp);
+    })).sort((a, b) => a.timestamp - b.timestamp);
 
     return res.status(200).json({
       success: true,
       data: {
-        symbol: value.symbol,
+        symbol,
         interval: finalInterval,
-        range: value.range,
-        historicalData: sortedData
+        range,
+        historicalData
       }
     });
   } catch (err) {
@@ -100,7 +92,6 @@ const getHistoricalStockData = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Failed to fetch historical stock data' });
   }
 };
-
 
 module.exports = {
   searchStock,
