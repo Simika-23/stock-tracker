@@ -13,7 +13,12 @@ const userValidationSchema = Joi.object({
 
 // Register user
 const createUser = async (req, res) => {
-  console.log("Request Body:", req.body);
+  // Log only safe info, mask password
+  console.log("Register request:", { 
+    userName: req.body.userName, 
+    email: req.body.email, 
+    password: '********' 
+  });
   
   try {
     // Validate input using Joi
@@ -78,7 +83,11 @@ const loginSchema = Joi.object({
 
 // Login user
 const loginUser = async (req, res) => {
-  console.log("Login Request:", req.body);
+  // Log only safe info, mask password
+  console.log("Login attempt:", { 
+    email: req.body.email, 
+    password: '********' 
+  });
 
   try {
     // Validate request body using Joi
@@ -205,4 +214,3 @@ module.exports = {
   deleteUser,
   findUserById
 };
-
