@@ -32,6 +32,7 @@ const stockRoutes = require('./routes/stock');
 const watchlistRoutes = require('./routes/watchlist');
 const alertRoutes = require('./routes/alert');
 const notificationRoutes = require('./routes/notification');
+const sentimentRoutes = require('./routes/news.js');
 
 // USE ROUTES
 app.use('/', homeRoutes);
@@ -42,6 +43,7 @@ app.use('/api/stocks', stockRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/news', sentimentRoutes);
 
 // SERVER BOOTSTRAPPING Function
 const startServer = async () => {
