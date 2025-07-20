@@ -1,11 +1,12 @@
-// Required Dependencies
+// portfolioController.js
+
 const axios = require('axios');
 const Joi = require('joi');
 const Portfolio = require('../models/portfolio');
 
 // Input Validation Schema using Joi
 const portfolioSchema = Joi.object({
-  stockSymbol: Joi.string().trim().required(),
+  stockSymbol: Joi.string().trim().uppercase().required(),
   quantity: Joi.number().positive().required(),
   purchasePrice: Joi.number().positive().required()
 });
@@ -13,15 +14,19 @@ const portfolioSchema = Joi.object({
 // Live Data Caching to reduce API load
 const liveDataCache = new Map();
 
+/**
+ * Fetch detailed live stock data for portfolio entries
+ * Caches result to optimize API calls during session
+ */
 const fetchLiveData = async (symbol) => {
   try {
-    if (liveDataCache.has(symbol)) return liveDataCache.get(symbol); // Return from cache if available
+    if (liveDataCache.has(symbol)) return liveDataCache.get(symbol); // Return cached data
 
     const { data } = await axios.get(
       `https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`
     );
 
-    if (!data || data.status === 'error' || !data.name) return null; // Protect against bad API response
+    if (!data || data.status === 'error' || !data.name) return null;
 
     const parsed = {
       name: data.name,
@@ -33,18 +38,35 @@ const fetchLiveData = async (symbol) => {
       previous_close: parseFloat(data.previous_close)
     };
 
-    liveDataCache.set(symbol, parsed); // Cache live data for session
+    liveDataCache.set(symbol, parsed);
     return parsed;
-
   } catch (err) {
-    console.error(`Live data error for ${symbol}:`, err.message); // Improved error logging
+    console.error(`Live data error for ${symbol}:`, err.message);
+    return null;
+  }
+};
+
+/**
+ * Fetch only current stock price for performance calculations
+ */
+const fetchCurrentStockPrice = async (symbol) => {
+  try {
+    const { data } = await axios.get(
+      `https://api.twelvedata.com/price?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`
+    );
+
+    if (!data || data.status === 'error' || !data.price) return null;
+
+    return parseFloat(data.price);
+  } catch (err) {
+    console.error(`Current price fetch error for ${symbol}:`, err.message);
     return null;
   }
 };
 
 const createPortfolioEntry = async (req, res) => {
   try {
-    const { error, value } = portfolioSchema.validate(req.body); // Validate input
+    const { error, value } = portfolioSchema.validate(req.body);
     if (error) return res.status(400).json({ success: false, message: error.details[0].message });
 
     const { stockSymbol, quantity, purchasePrice } = value;
@@ -62,8 +84,7 @@ const createPortfolioEntry = async (req, res) => {
       closingPrice: live.previous_close ?? null
     });
 
-    res.status(201).json({ success: true, data: newEntry.get({ plain: true }) }); // Return plain object, not Sequelize instance
-
+    res.status(201).json({ success: true, data: newEntry.get({ plain: true }) });
   } catch (err) {
     console.error(`User ${req.user.id} | Create Error:`, err.message);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -85,7 +106,6 @@ const getPortfolioEntries = async (req, res) => {
     }));
 
     res.status(200).json({ success: true, data: enriched });
-
   } catch (err) {
     console.error(`User ${req.user.id} | Fetch Error:`, err.message);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -102,7 +122,6 @@ const getPortfolioEntryById = async (req, res) => {
 
     const live = await fetchLiveData(entry.stockSymbol);
     res.status(200).json({ success: true, data: { ...entry.get({ plain: true }), live } });
-
   } catch (err) {
     console.error(`User ${req.user.id} | Get By ID Error:`, err.message);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -126,8 +145,7 @@ const updatePortfolioEntry = async (req, res) => {
     entry.purchasePrice = purchasePrice ?? entry.purchasePrice;
 
     await entry.save();
-    res.status(200).json({ success: true, data: entry.get({ plain: true }) }); // Return plain object
-
+    res.status(200).json({ success: true, data: entry.get({ plain: true }) });
   } catch (err) {
     console.error(`User ${req.user.id} | Update Error:`, err.message);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -144,7 +162,6 @@ const deletePortfolioEntry = async (req, res) => {
 
     await entry.destroy();
     res.status(200).json({ success: true, message: 'Deleted successfully' });
-
   } catch (err) {
     console.error(`User ${req.user.id} | Delete Error:`, err.message);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -152,34 +169,43 @@ const deletePortfolioEntry = async (req, res) => {
 };
 
 const getPortfolioPerformance = async (req, res) => {
-    const userId = req.user.id;
+  const userId = req.user.id;
 
-    try {
-        const portfolio = await Portfolio.findAll({ where: { userId } });
+  try {
+    const portfolio = await Portfolio.findAll({ where: { userId } });
 
-        // Performance calculations...
-        let totalInvested = 0;
-        let totalCurrent = 0;
+    let totalInvested = 0;
+    let totalCurrent = 0;
 
-        for (let item of portfolio) {
-            totalInvested += item.quantity * item.buyPrice;
+    for (const item of portfolio) {
+      totalInvested += item.quantity * item.purchasePrice;
 
-            const currentPrice = await fetchCurrentStockPrice(item.symbol); // External API call
-            totalCurrent += item.quantity * currentPrice;
-        }
+      const currentPrice = await fetchCurrentStockPrice(item.stockSymbol);
+      if (currentPrice === null) {
+        return res.status(502).json({ success: false, message: `Failed to retrieve current price for ${item.stockSymbol}` });
+      }
 
-        const profitOrLoss = totalCurrent - totalInvested;
-        const percentChange = (profitOrLoss / totalInvested) * 100;
-
-        res.json({ totalInvested, totalCurrent, profitOrLoss, percentChange });
-    } catch (error) {
-        console.error("Performance calculation error:", error);
-        res.status(500).json({ error: "Error calculating performance" });
+      totalCurrent += item.quantity * currentPrice;
     }
+
+    const profitOrLoss = totalCurrent - totalInvested;
+    const percentChange = totalInvested === 0 ? 0 : (profitOrLoss / totalInvested) * 100;
+
+    res.status(200).json({ 
+      success: true,
+      data: {
+        totalInvested,
+        totalCurrent,
+        profitOrLoss,
+        percentChange
+      }
+    });
+  } catch (error) {
+    console.error("Performance calculation error:", error);
+    res.status(500).json({ success: false, message: "Error calculating performance" });
+  }
 };
 
-
-// Export all functions
 module.exports = {
   createPortfolioEntry,
   getPortfolioEntries,
@@ -188,4 +214,3 @@ module.exports = {
   deletePortfolioEntry,
   getPortfolioPerformance
 };
-
