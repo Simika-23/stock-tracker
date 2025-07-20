@@ -13,9 +13,9 @@ setInterval(checkAlerts, 60000); // check every 60 seconds
 
 // Middleware Setup
 app.use(express.json());  // Parses incoming JSON requests
+app.use(express.urlencoded({ extended: true })); 
 app.use(cookieParser());  // Enables reading cookies (used in auth)
 app.use('/uploads', express.static('uploads'));  // Serves uploaded static files
-
 
 // CORS Configuration (Allow Frontend Access)
 app.use(cors({
