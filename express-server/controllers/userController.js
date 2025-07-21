@@ -29,7 +29,7 @@ const createUser = async (req, res) => {
 
     // Extract validated and sanitized values
     const userName = value.userName.trim();
-    const email = value.email.trim();
+    const email = value.email.trim().toLowerCase();
     const password = value.password;
 
     // Check if username already exists
@@ -53,6 +53,7 @@ const createUser = async (req, res) => {
       username: userName,
       email,
       password: hashedPassword,
+      role: 'user' 
     });
 
     return res.status(201).json({

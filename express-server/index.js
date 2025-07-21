@@ -33,6 +33,7 @@ const watchlistRoutes = require('./routes/watchlist');
 const alertRoutes = require('./routes/alert');
 const notificationRoutes = require('./routes/notification');
 const sentimentRoutes = require('./routes/news.js');
+const securityRoutes = require('./routes/security'); 
 
 // USE ROUTES
 app.use('/', homeRoutes);
@@ -44,6 +45,7 @@ app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/news', sentimentRoutes);
+app.use('/api/security', securityRoutes);
 
 // SERVER BOOTSTRAPPING Function
 const startServer = async () => {
@@ -52,7 +54,7 @@ const startServer = async () => {
 
     // Sync models only if not in production
     if (process.env.NODE_ENV !== 'production') {
-      await sequelize.sync({ alert: true }); // Alter only for development
+      await sequelize.sync({ alter: true }); // Alter only for development
       console.log('✅ Database synced (ALTER applied)');
     }
 
