@@ -1,73 +1,151 @@
-import React, { useEffect, useState } from "react";
-import { getPortfolioApi } from "../api/Api";
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowUpRightIcon, ArrowDownRightIcon } from '@heroicons/react/24/solid';
+import { getPortfolioApi } from '../api/Api'; // Adjust the import path as needed
 
-const PortfolioPage = () => {
+/**
+ * Portfolio Component
+ * Displays user's stock portfolio with live market data.
+ * Handles authentication, API fetching, and user-friendly UI states.
+ */
+const Portfolio = () => {
   const [portfolio, setPortfolio] = useState([]);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    async function fetchPortfolio() {
-      try {
-        const res = await getPortfolioApi();
-        setPortfolio(res.data.data);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch portfolio");
-      }
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
     }
+
+    const fetchPortfolio = async () => {
+      try {
+        setLoading(true);
+        const response = await getPortfolioApi();
+        if (response.data.success) {
+          setPortfolio(response.data.data);
+          setErrorMessage(null);
+        } else {
+          setErrorMessage('Failed to fetch portfolio data.');
+        }
+      } catch (error) {
+        console.error('Error fetching portfolio:', error);
+        if (error.response && error.response.status === 401) {
+          navigate('/login');
+        } else {
+          setErrorMessage('An unexpected error occurred. Please try again later.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchPortfolio();
-  }, []);
+  }, [navigate]);
 
-  const calculateTotalInvestment = (item) => {
-    return (item.quantity * item.purchasePrice).toFixed(2);
-  };
+  if (loading) {
+    return (
+      <div className="text-center p-10 text-lg font-semibold text-gray-700">
+        Loading portfolio...
+      </div>
+    );
+  }
 
-  const calculateTotalPortfolio = () => {
-    return portfolio
-      .reduce((acc, item) => acc + item.quantity * item.purchasePrice, 0)
-      .toFixed(2);
-  };
+  if (errorMessage) {
+    return (
+      <div className="text-center p-10 text-lg font-semibold text-red-600">
+        {errorMessage}
+      </div>
+    );
+  }
+
+  if (portfolio.length === 0) {
+    return (
+      <div className="text-center p-10 text-lg font-medium text-gray-600">
+        Your portfolio is currently empty. Start adding stocks to track your investments!
+        <button
+          onClick={() => navigate('/add-stock')} // Change route if needed
+          className="mt-4 px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+        >
+          Add Stocks
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white shadow-xl rounded-2xl p-8 md:p-10 w-full max-w-3xl space-y-6">
-        <h2 className="text-2xl md:text-3xl font-bold text-center text-indigo-800">📊 My Portfolio</h2>
+    <section className="p-8 max-w-7xl mx-auto bg-white rounded-lg shadow-lg">
+      <h2 className="text-3xl font-bold mb-8 text-center text-gray-900">
+        Stock Portfolio Overview
+      </h2>
+      <div className="overflow-x-auto rounded-lg border border-gray-300 shadow-sm">
+        <table className="min-w-full divide-y divide-gray-200 text-left text-sm font-sans">
+          <thead className="bg-gray-50 text-gray-700 font-semibold">
+            <tr>
+              <th scope="col" className="px-6 py-4">#</th>
+              <th scope="col" className="px-6 py-4">Stock</th>
+              <th scope="col" className="px-6 py-4">Quantity</th>
+              <th scope="col" className="px-6 py-4">Purchase Price (USD)</th>
+              <th scope="col" className="px-6 py-4">Live Price (USD)</th>
+              <th scope="col" className="px-6 py-4">% Change</th>
+              <th scope="col" className="px-6 py-4">Date Added</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 text-gray-800">
+            {portfolio.map((item, index) => {
+              const live = item.live || {};
+              const price = live.price ? `$${parseFloat(live.price).toFixed(2)}` : 'N/A';
+              const percent = live.change_percent !== undefined && live.change_percent !== null
+                ? parseFloat(live.change_percent)
+                : null;
+              const isGain = percent > 0;
+              const isLoss = percent < 0;
 
-        {error && (
-          <div className="bg-red-100 text-red-700 p-4 rounded-lg text-center">
-            {error}
-          </div>
-        )}
-
-        {portfolio.length > 0 ? (
-          <>
-            <div className="grid md:grid-cols-2 gap-4">
-              {portfolio.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-4 bg-gray-50 rounded-xl shadow hover:shadow-md transition"
-                >
-                  <p className="font-semibold text-lg text-indigo-700">📈 Stock: {item.stockSymbol.toUpperCase()}</p>
-                  <p className="text-gray-700">Quantity: {item.quantity}</p>
-                  <p className="text-gray-700">Buy Price: ₹{item.purchasePrice.toFixed(2)}</p>
-                  <p className="text-green-700 font-semibold">
-                    Investment: ₹{calculateTotalInvestment(item)}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="text-center pt-6 border-t mt-6">
-              <p className="text-lg font-bold text-indigo-800">
-                💰 Total Investment: ₹{calculateTotalPortfolio()}
-              </p>
-            </div>
-          </>
-        ) : (
-          <p className="text-center text-gray-600">No portfolio data found.</p>
-        )}
+              return (
+                <tr key={item.id} className="hover:bg-gray-50 transition-colors duration-200">
+                  <td className="px-6 py-3">{index + 1}</td>
+                  <td className="px-6 py-3 font-semibold text-blue-700">{item.stockSymbol}</td>
+                  <td className="px-6 py-3">{item.quantity ?? '-'}</td>
+                  <td className="px-6 py-3">
+                    {item.purchasePrice !== undefined && item.purchasePrice !== null
+                      ? `$${item.purchasePrice.toFixed(2)}`
+                      : '-'}
+                  </td>
+                  <td className="px-6 py-3">{price}</td>
+                  <td className={`px-6 py-3 ${isGain ? 'text-green-600' : isLoss ? 'text-red-600' : 'text-gray-600'}`}>
+                    {percent !== null ? (
+                      <div className="flex items-center font-medium">
+                        {isGain ? (
+                          <ArrowUpRightIcon className="w-4 h-4 mr-1" aria-label="Price up" />
+                        ) : isLoss ? (
+                          <ArrowDownRightIcon className="w-4 h-4 mr-1" aria-label="Price down" />
+                        ) : null}
+                        {percent.toFixed(2)}%
+                      </div>
+                    ) : (
+                      'N/A'
+                    )}
+                  </td>
+                  <td className="px-6 py-3 text-gray-600">
+                    {item.createdAt
+                      ? new Date(item.createdAt).toLocaleDateString(undefined, {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })
+                      : 'N/A'}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
-    </div>
+    </section>
   );
 };
 
-export default PortfolioPage;
+export default Portfolio;

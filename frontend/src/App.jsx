@@ -10,7 +10,7 @@ import Features from './pages/Features'
 import Register from './pages/Register'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
-import PortfolioPage from './pages/Portfolio'
+import Portfolio from './pages/Portfolio'
 import ProtectedRoute from './components/ProtectedRoute'
 import Unauthorized from './Unauthorized'
 
@@ -43,7 +43,7 @@ const App = () => {
       <Route path="/register" element={<Register/>}/>
       <Route path="/login" element={<Login/>}/>
       <Route path="/dashboard" element={<ProtectedRoute allowedRoles={["user", "admin"]}> <Dashboard/> </ProtectedRoute>}/>
-      <Route path="/portfolio" element={<ProtectedRoute allowedRoles={["user"]}> <PortfolioPage/> </ProtectedRoute>}/>
+      <Route path="/portfolio" element={<ProtectedRoute allowedRoles={["user"]}> <Portfolio/> </ProtectedRoute>}/>
       <Route path="/unauthorized" element={<Unauthorized/>}/>
     </Routes>
    </Router>
