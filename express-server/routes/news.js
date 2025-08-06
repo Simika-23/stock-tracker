@@ -16,6 +16,7 @@ const sentimentLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-router.get('/sentiment', authGuard, sentimentLimiter, getNewsSentiment);
+// router.get('/sentiment', authGuard, sentimentLimiter, getNewsSentiment);
+router.get('/sentiment', authGuard, getNewsSentiment);
 
 module.exports = router;

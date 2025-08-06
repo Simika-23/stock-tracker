@@ -3,7 +3,7 @@ const Alert = require('../models/alert');
 const Notification = require('../models/notification');
 
 const checkAlerts = async () => {
-  console.log("AlertChecker running at", new Date().toISOString());
+  // console.log("AlertChecker running at", new Date().toISOString());
 
   try {
     const activeAlerts = await Alert.findAll({ where: { isActive: true } });

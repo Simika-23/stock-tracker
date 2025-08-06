@@ -1,8 +1,9 @@
 const router = require("express").Router();
 const rateLimit = require("express-rate-limit");
-const { createUser, loginUser, getAllUsers, findUserById, updateUser, deleteUser } = require("../controllers/userController");
+const { createUser, loginUser, getAllUsers, findUserById, updateUser, deleteUser, getCurrentUser } = require("../controllers/userController");
 const authGuard = require("../middleware/authguard");
 const isAdmin = require("../middleware/isAdmin");
+const fileUpload = require("../middleware/multer");
 
 // Rate limiter for login and register to prevent abuse
 const authLimiter = rateLimit({
@@ -12,10 +13,12 @@ const authLimiter = rateLimit({
 });
 
 router.post("/register", authLimiter, createUser);
-router.post("/login", authLimiter, loginUser);
+// router.post("/login", authLimiter, loginUser);
+router.post("/login", loginUser);
+router.get("/me", authGuard, getCurrentUser);
 router.get("/", authGuard, isAdmin, getAllUsers);
 router.get("/:id", authGuard, findUserById);
-router.put("/:id", authGuard, updateUser);
+router.put("/:id", authGuard, fileUpload("profileImage"), updateUser);
 router.delete("/:id", authGuard, deleteUser);
 
 module.exports = router;

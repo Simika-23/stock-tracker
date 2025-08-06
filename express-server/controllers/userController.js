@@ -166,6 +166,11 @@ const updateUser = async (req, res) => {
       updatedFields.password = hashedPassword;
     }
 
+    // If file uploaded
+    if (req.files && req.files.length > 0) {
+      updatedFields.profileImage = req.files[0].filename; 
+    }
+
     await User.update(updatedFields, { where: { id: userId } });
 
     res.status(200).json({ success: true, message: "User updated successfully" });
@@ -173,6 +178,7 @@ const updateUser = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 // Delete user
 const deleteUser = async (req, res) => {
@@ -206,6 +212,18 @@ const findUserById = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+const getCurrentUser = async (req, res) => {
+  try {
+    // Assuming you set user ID from authGuard middleware
+    const userId = req.user.id;
+    const user = await User.findByPk(userId, { attributes: { exclude: ['password'] } });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.json({ success: true, data: user });
+  } catch (err) {
+    console.error('GetCurrentUser error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
 
 module.exports = {
   createUser,
@@ -213,5 +231,6 @@ module.exports = {
   getAllUsers,
   updateUser,
   deleteUser,
-  findUserById
+  findUserById,
+  getCurrentUser
 };

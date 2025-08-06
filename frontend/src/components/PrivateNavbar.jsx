@@ -10,6 +10,8 @@ import {
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
+import { getNotificationsApi } from "../api/Api";
+import toast from "react-hot-toast";
 
 const navItems = [
   { name: "Dashboard", path: "/dashboard" },
@@ -20,8 +22,46 @@ const navItems = [
 const PrivateNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
   const profileRef = useRef(null);
+
+  useEffect(() => {
+    let prevNotificationIds = new Set();
+
+    const fetchNotifications = async () => {
+      try {
+        const { data } = await getNotificationsApi();
+        if (data.success) {
+          // Detect new notifications that were not previously fetched
+          const newNotif = data.data.find(
+            (n) => !prevNotificationIds.has(n.id)
+          );
+
+          if (newNotif) {
+            toast.success(newNotif.message, {
+              duration: 6000,
+              position: "top-right",
+              // NO emoji icon here as per your request
+            });
+          }
+
+          prevNotificationIds = new Set(data.data.map((n) => n.id));
+          setNotifications(data.data);
+
+          const unread = data.data.filter((n) => !n.isRead).length;
+          setUnreadCount(unread);
+        }
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
+    };
+
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000); // every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -88,7 +128,11 @@ const PrivateNavbar = () => {
             onClick={() => navigate("/notifications")}
           >
             <BellIcon className="h-6 w-6" />
-            <span className="absolute top-2 right-2 block h-2 w-2 rounded-full ring-1 ring-indigo-50 bg-red-600 opacity-90" />
+            {unreadCount > 0 && (
+              <span className="absolute top-2 right-2 flex items-center justify-center text-xs font-bold text-white bg-red-600 rounded-full w-5 h-5">
+                {unreadCount}
+              </span>
+            )}
           </motion.button>
 
           {/* Profile dropdown */}
@@ -102,8 +146,9 @@ const PrivateNavbar = () => {
             >
               <UserCircleIcon className="h-8 w-8" />
               <ChevronDownIcon
-                className={`h-5 w-5 transition-transform ${profileOpen ? "rotate-180" : "rotate-0"
-                  }`}
+                className={`h-5 w-5 transition-transform ${
+                  profileOpen ? "rotate-180" : "rotate-0"
+                }`}
               />
             </button>
 
@@ -166,11 +211,7 @@ const PrivateNavbar = () => {
           aria-label="Toggle menu"
           className="md:hidden text-blue-800 hover:text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
-          {isOpen ? (
-            <XMarkIcon className="h-7 w-7" />
-          ) : (
-            <Bars3Icon className="h-7 w-7" />
-          )}
+          {isOpen ? <XMarkIcon className="h-7 w-7" /> : <Bars3Icon className="h-7 w-7" />}
         </button>
       </div>
 
@@ -201,6 +242,11 @@ const PrivateNavbar = () => {
           >
             <BellIcon className="h-6 w-6" />
             Notifications
+            {unreadCount > 0 && (
+              <span className="ml-2 bg-red-600 text-white text-xs font-bold rounded-full px-2">
+                {unreadCount}
+              </span>
+            )}
           </button>
 
           <button

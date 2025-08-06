@@ -13,6 +13,15 @@ import Dashboard from './pages/Dashboard'
 import Portfolio from './pages/Portfolio'
 import ProtectedRoute from './components/ProtectedRoute'
 import Unauthorized from './Unauthorized'
+import StockListPage from "./pages/StockListPage";
+import Watchlist from './pages/Watchlist'
+import AddStock from './pages/AddStock'
+import NotificationsPage from './pages/Notifications'
+import NewsPage from './pages/NewsPage'
+import Profile from './pages/Profile'
+import AlertsPage from './pages/AlertsPage'
+import Settings from './pages/Settings'
+
 
 // NavbarWrapper: Shows PublicNavbar or PrivateNavbar based on token presence and current route
 const NavbarWrapper = () => {
@@ -42,9 +51,18 @@ const App = () => {
       <Route path="/features" element={<Features/>}/>
       <Route path="/register" element={<Register/>}/>
       <Route path="/login" element={<Login/>}/>
+      <Route path="/profile" element={<ProtectedRoute allowedRoles={["user"]}> <Profile/> </ProtectedRoute>}/>
       <Route path="/dashboard" element={<ProtectedRoute allowedRoles={["user", "admin"]}> <Dashboard/> </ProtectedRoute>}/>
       <Route path="/portfolio" element={<ProtectedRoute allowedRoles={["user"]}> <Portfolio/> </ProtectedRoute>}/>
+      <Route path="/portfolio/add" element={<ProtectedRoute allowedRoles={["user"]}> <AddStock/> </ProtectedRoute>}/>
+      <Route path="/watchlist" element={<ProtectedRoute allowedRoles={["user"]}> <Watchlist/> </ProtectedRoute>}/>
       <Route path="/unauthorized" element={<Unauthorized/>}/>
+      <Route path="/notifications" element={<ProtectedRoute allowedRoles={["user"]}><NotificationsPage/></ProtectedRoute>}/>
+      <Route path="/stocks" element={<ProtectedRoute allowedRoles={["user", "admin"]}><StockListPage/></ProtectedRoute>}/>
+      <Route path="/news" element={<ProtectedRoute allowedRoles={["user", "admin"]}><NewsPage/></ProtectedRoute>}/>
+      <Route path="/alerts" element={<ProtectedRoute allowedRoles={["user"]}><AlertsPage/></ProtectedRoute>}/>
+      <Route path="/settings" element={<ProtectedRoute allowedRoles={["user", "admin"]}><Settings/></ProtectedRoute>}/>
+
     </Routes>
    </Router>
   )
