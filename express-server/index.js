@@ -1,28 +1,27 @@
-// Main Sever Entry Point
+// Main Server Entry Point
 const express = require('express');
 const app = express();
 require('dotenv').config();
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-   
+
 const PORT = process.env.PORT || 5555;
 const { connectDB, sequelize } = require('./db/database');
 const { checkAlerts } = require('./controllers/alertChecker');
 
-setInterval(checkAlerts, 60000); // check every 60 seconds
+setInterval(checkAlerts, 60000);
 
 // Middleware Setup
-app.use(express.json());  // Parses incoming JSON requests
-app.use(express.urlencoded({ extended: true })); 
-app.use(cookieParser());  // Enables reading cookies (used in auth)
-app.use('/uploads', express.static('uploads'));  // Serves uploaded static files
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use('/uploads', express.static('uploads'));
 
-// CORS Configuration (Allow Frontend Access)
+// CORS
 app.use(cors({
     credentials: true,
     origin: 'http://localhost:5173'
 }));
-
 
 // IMPORT ROUTES
 const homeRoutes = require('./routes/home');
@@ -45,30 +44,21 @@ app.use('/api/alerts', alertRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/news', sentimentRoutes);
 
-// SERVER BOOTSTRAPPING Function
-const startServer = async () => {
-  try {
-    await connectDB(); // Safely connect DB
+// Start server only if this file is run directly
+if (require.main === module) {
+    const startServer = async () => {
+        try {
+            await connectDB();
+            app.listen(PORT, () => {
+                console.log(`🚀 Server is running on http://localhost:${PORT}`);
+            });
+        } catch (err) {
+            console.error('❌ Server startup failed:', err);
+            process.exit(1);
+        }
+    };
+    startServer();
+}
 
-    // Sync models only if not in production
-    if (process.env.NODE_ENV !== 'production') {
-      await sequelize.sync({ alter: true }); // Alter only for development
-      console.log('✅ Database synced (ALTER applied)');
-    }
-
-    app.listen(PORT, () => {
-      console.log(`🚀 Server is running on http://localhost:${PORT}`);
-    });
-
-  } catch (err) {
-    console.error('❌ Server startup failed:', err);
-    process.exit(1); // Exit so issues don't go unnoticed
-  }
-};
-
-startServer();
-
-
-
-
-
+// Export app for testing
+module.exports = app;
