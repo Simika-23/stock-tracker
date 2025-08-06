@@ -1,3 +1,4 @@
+// src/App.jsx
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom"
 import { Toaster } from 'react-hot-toast'
@@ -23,14 +24,13 @@ import Profile from './pages/Profile'
 import AlertsPage from './pages/AlertsPage'
 import Settings from './pages/Settings'
 
-
 // NavbarWrapper: Shows PublicNavbar or PrivateNavbar based on token presence and current route
 const NavbarWrapper = () => {
   const location = useLocation();
   const token = localStorage.getItem("token");
 
-  // Define routes that are always public (show public navbar)
-  const publicPaths = ["/", "/features", "/login", "/register", "/unauthorized"];
+  // Add /contact to public routes
+  const publicPaths = ["/", "/features", "/contact", "/login", "/register", "/unauthorized"];
   const isPublicPath = publicPaths.includes(location.pathname);
 
   // Show PublicNavbar if no token or on a public path
@@ -44,29 +44,30 @@ const NavbarWrapper = () => {
 
 const App = () => {
   return (
-   <Router>
-    <Toaster/>
-    <NavbarWrapper/>
-    <Routes>
-      <Route path="/" element={<Landing/>}/>
-      <Route path="/features" element={<Features/>}/>
-      <Route path="/register" element={<Register/>}/>
-      <Route path="/contact" element={<Contact/>}/>
-      <Route path="/login" element={<Login/>}/>
-      <Route path="/profile" element={<ProtectedRoute allowedRoles={["user"]}> <Profile/> </ProtectedRoute>}/>
-      <Route path="/dashboard" element={<ProtectedRoute allowedRoles={["user", "admin"]}> <Dashboard/> </ProtectedRoute>}/>
-      <Route path="/portfolio" element={<ProtectedRoute allowedRoles={["user"]}> <Portfolio/> </ProtectedRoute>}/>
-      <Route path="/portfolio/add" element={<ProtectedRoute allowedRoles={["user"]}> <AddStock/> </ProtectedRoute>}/>
-      <Route path="/watchlist" element={<ProtectedRoute allowedRoles={["user"]}> <Watchlist/> </ProtectedRoute>}/>
-      <Route path="/unauthorized" element={<Unauthorized/>}/>
-      <Route path="/notifications" element={<ProtectedRoute allowedRoles={["user"]}><NotificationsPage/></ProtectedRoute>}/>
-      <Route path="/stocks" element={<ProtectedRoute allowedRoles={["user", "admin"]}><StockListPage/></ProtectedRoute>}/>
-      <Route path="/news" element={<ProtectedRoute allowedRoles={["user", "admin"]}><NewsPage/></ProtectedRoute>}/>
-      <Route path="/alerts" element={<ProtectedRoute allowedRoles={["user"]}><AlertsPage/></ProtectedRoute>}/>
-      <Route path="/settings" element={<ProtectedRoute allowedRoles={["user", "admin"]}><Settings/></ProtectedRoute>}/>
+    <Router>
+      <Toaster />
+      <NavbarWrapper />
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/features" element={<Features />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
 
-    </Routes>
-   </Router>
+        {/* Protected Routes */}
+        <Route path="/profile" element={<ProtectedRoute allowedRoles={["user"]}> <Profile /> </ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute allowedRoles={["user", "admin"]}> <Dashboard /> </ProtectedRoute>} />
+        <Route path="/portfolio" element={<ProtectedRoute allowedRoles={["user"]}> <Portfolio /> </ProtectedRoute>} />
+        <Route path="/portfolio/add" element={<ProtectedRoute allowedRoles={["user"]}> <AddStock /> </ProtectedRoute>} />
+        <Route path="/watchlist" element={<ProtectedRoute allowedRoles={["user"]}> <Watchlist /> </ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute allowedRoles={["user"]}> <NotificationsPage /> </ProtectedRoute>} />
+        <Route path="/stocks" element={<ProtectedRoute allowedRoles={["user", "admin"]}> <StockListPage /> </ProtectedRoute>} />
+        <Route path="/news" element={<ProtectedRoute allowedRoles={["user", "admin"]}> <NewsPage /> </ProtectedRoute>} />
+        <Route path="/alerts" element={<ProtectedRoute allowedRoles={["user"]}> <AlertsPage /> </ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute allowedRoles={["user", "admin"]}> <Settings /> </ProtectedRoute>} />
+      </Routes>
+    </Router>
   )
 }
 
