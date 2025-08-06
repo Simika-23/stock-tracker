@@ -7,6 +7,7 @@ import PrivateNavbar from './components/PrivateNavbar'
 
 import Landing from './pages/Landing'
 import Features from './pages/Features'
+import Contact from './pages/Contact'
 import Register from './pages/Register'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -50,6 +51,7 @@ const App = () => {
       <Route path="/" element={<Landing/>}/>
       <Route path="/features" element={<Features/>}/>
       <Route path="/register" element={<Register/>}/>
+      <Route path="/contact" element={<Contact/>}/>
       <Route path="/login" element={<Login/>}/>
       <Route path="/profile" element={<ProtectedRoute allowedRoles={["user"]}> <Profile/> </ProtectedRoute>}/>
       <Route path="/dashboard" element={<ProtectedRoute allowedRoles={["user", "admin"]}> <Dashboard/> </ProtectedRoute>}/>
